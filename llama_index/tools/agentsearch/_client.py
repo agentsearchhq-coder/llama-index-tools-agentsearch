@@ -1,16 +1,19 @@
 """HTTP layer: free relay search and x402 pay-per-call via the Pocket Network Agentic Portal.
 
-The wallet key is read from env, used only to sign, and never logged or returned.
+The wallet key is read from env and used only to sign; it is not included in tool output or error messages.
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import threading
 from typing import Any, Optional
 
 import httpx
+
+logger = logging.getLogger("llama_index.tools.agentsearch")
 
 FREE_RELAY_URL = "https://relay.agentsearchhq.com"
 FREE_RELAY_DAILY_LIMIT = 25
@@ -21,6 +24,11 @@ PORTAL_PAYEE = "0xF732ea490c5766071785a2310523f7fA2CEbB829"
 MAX_PER_CALL_ATOMIC = 5000  # $0.005 hard ceiling
 DEFAULT_SESSION_CAP_ATOMIC = 1_000_000  # $1.00
 KEY_ENV_VARS = ("AGENTSEARCH_WALLET_PRIVATE_KEY", "POCKET_PRIVATE_KEY")
+# Paid search is opt-in: mode="paid" on the spec, or AGENTSEARCH_MODE=paid in the environment.
+# A wallet key in the environment on its own never switches search to paid.
+MODE_ENV_VAR = "AGENTSEARCH_MODE"
+PAID_INSTALL_HINT = "pip install 'llama-index-tools-agentsearch[paid]'"
+MAX_RESULTS_MIN, MAX_RESULTS_MAX = 1, 5
 SERVICES = {
     "search": ("agentsearch-web-search-v1", "/v1/search"),
     "extract": ("agentsearch-web-extract-v1", "/v1/extract"),
@@ -32,10 +40,11 @@ THIN_CHARS = 200
 DOCS = "https://agentsearchhq.com/?utm_source=llama-index-tools-agentsearch&utm_medium=package"
 
 FREE_LIMIT_MESSAGE = (
-    f"Free search limit reached ({FREE_RELAY_DAILY_LIMIT} searches per day per user; resets daily). "
+    f"Free search limit reached (up to {FREE_RELAY_DAILY_LIMIT} searches/day per IP; resets daily). "
     "For unlimited search plus extract/render, set AGENTSEARCH_WALLET_PRIVATE_KEY to the key of a NEW wallet "
     "funded with a little USDC on Base ($0.005 per call via x402, capped by AGENTSEARCH_MAX_TOTAL_ATOMIC, "
-    f"default $1.00) and install llama-index-tools-agentsearch[paid]. Docs: {DOCS}"
+    f"default $1.00), install llama-index-tools-agentsearch[paid], and opt in to paid search with mode='paid' or "
+    f"AGENTSEARCH_MODE=paid. Docs: {DOCS}"
 )
 
 
@@ -112,6 +121,46 @@ def free_search(query: str, max_results: Optional[int] = None, client: Optional[
 
 def has_wallet_key() -> bool:
     return any((os.environ.get(n) or "").strip() for n in KEY_ENV_VARS)
+
+
+def env_mode() -> str:
+    """AGENTSEARCH_MODE as "paid", "free" or "" (unset or unrecognised). Only affects mode="auto"."""
+    v = (os.environ.get(MODE_ENV_VAR) or "").strip().lower()
+    return v if v in ("paid", "free") else ""
+
+
+def paid_extra_installed() -> bool:
+    """True if the [paid] extra (x402 SDK + eth-account) is importable. Imports nothing that signs."""
+    try:
+        import eth_account  # noqa: F401
+        from x402 import x402ClientSync  # noqa: F401
+        from x402.http import x402HTTPClientSync  # noqa: F401
+        from x402.mechanisms.evm.exact import register_exact_evm_client  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def validate_max_results(value: Any) -> Optional[int]:
+    """None stays None (server default, 5). Otherwise an integer from 1 to 5, or AgentSearchError."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        n = None
+    elif isinstance(value, int):
+        n = value
+    elif isinstance(value, float) and value.is_integer():
+        n = int(value)
+    elif isinstance(value, str) and value.strip().lstrip("+-").isdigit():
+        n = int(value.strip())
+    else:
+        n = None
+    if n is None or not MAX_RESULTS_MIN <= n <= MAX_RESULTS_MAX:
+        raise AgentSearchError(
+            f"max_results must be an integer from {MAX_RESULTS_MIN} to {MAX_RESULTS_MAX} (got {value!r}). "
+            "Omit it for the default of 5. No call was made."
+        )
+    return n
 
 
 def _read_wallet_key() -> Optional[str]:
@@ -193,7 +242,7 @@ def call_portal(op: str, body: dict[str, Any], client: Optional[httpx.Client] = 
         from x402.mechanisms.evm.exact import register_exact_evm_client
     except ImportError as e:  # pragma: no cover
         raise AgentSearchError(
-            "Paid calls need the x402 SDK: pip install 'llama-index-tools-agentsearch[paid]'. Nothing was signed."
+            f"Paid calls need the [paid] extra (x402 SDK): {PAID_INSTALL_HINT}. Nothing was signed."
         ) from e
 
     key = _read_wallet_key()

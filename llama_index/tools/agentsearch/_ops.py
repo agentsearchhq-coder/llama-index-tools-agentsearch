@@ -6,13 +6,43 @@ from typing import Any, Optional
 from . import _client as c
 
 
+_noted_key_without_opt_in = False
+
+
+def resolve_search_mode(mode: str = "auto") -> str:
+    """Return "paid" or "free" for a search call.
+
+    mode="paid" and mode="free" are explicit and returned as-is (explicit paid without the [paid] extra
+    still errors with install instructions, in call_portal). mode="auto" is free unless paid is opted in
+    with AGENTSEARCH_MODE=paid; a wallet key in the environment alone does NOT switch to paid. If paid is
+    opted in but the [paid] extra is missing, auto falls back to free with a warning.
+    """
+    global _noted_key_without_opt_in
+    if mode in ("paid", "free"):
+        return mode
+    if c.env_mode() == "paid":
+        if not c.paid_extra_installed():
+            c.logger.warning(
+                "AgentSearch: AGENTSEARCH_MODE=paid is set, but the [paid] extra is not installed; "
+                "using free search instead. To enable paid search: %s", c.PAID_INSTALL_HINT,
+            )
+            return "free"
+        return "paid"
+    if c.has_wallet_key() and not _noted_key_without_opt_in:
+        _noted_key_without_opt_in = True
+        c.logger.info(
+            "AgentSearch: a wallet key is set, but search stays free in mode='auto'. "
+            "Use mode='paid' or AGENTSEARCH_MODE=paid to opt in to paid search."
+        )
+    return "free"
+
+
 def search(query: str, max_results: Optional[int] = None, mode: str = "auto") -> str:
     try:
         if not query or not str(query).strip():
             raise c.AgentSearchError("query must not be empty")
-        if max_results is not None:
-            max_results = max(1, min(int(max_results), 5))
-        if mode == "paid" or (mode == "auto" and c.has_wallet_key()):
+        max_results = c.validate_max_results(max_results)
+        if resolve_search_mode(mode) == "paid":
             body: dict[str, Any] = {"query": query}
             if max_results:
                 body["max_results"] = max_results

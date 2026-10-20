@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llama-index-tools-agentsearch"
-version = "0.2.0"
+version = "0.2.1"
 description = "llama-index tools agentsearch integration: free live web search, plus pay-per-call extract and JS render"
 readme = "README.md"
 license = "MIT"
@@ -26,7 +26,7 @@ Documentation = "https://agentsearchhq.com/agents.md?utm_source=llama-index-tool
 packages = ["llama_index"]
 
 [tool.hatch.build.targets.sdist]
-include = ["llama_index", "tests", "README.md", "LICENSE", "pyproject.toml"]
+include = ["llama_index", "tests", "README.md", "CHANGELOG.md", "LICENSE", "pyproject.toml"]
 
 [tool.llamahub]
 contains_example = false

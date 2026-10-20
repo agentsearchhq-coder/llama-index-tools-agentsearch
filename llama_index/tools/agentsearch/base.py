@@ -12,7 +12,9 @@ class AgentSearchToolSpec(BaseToolSpec):
     """AgentSearch tool spec: live web search (free by default), plus paid extract and render.
 
     Args:
-        mode: "auto" (paid if a wallet key is set, else free), "free" or "paid". Applies to search only.
+        mode: "auto" (default), "free" or "paid". Applies to search only. "auto" is free (up to 25
+            searches/day per IP) unless AGENTSEARCH_MODE=paid is set; a wallet key alone never switches
+            search to paid. If paid is opted in but the [paid] extra is missing, "auto" falls back to free.
     """
 
     spec_functions = ["search", "extract", "render"]
@@ -27,7 +29,7 @@ class AgentSearchToolSpec(BaseToolSpec):
 
         Args:
             query: the search query.
-            max_results: 1-5, default 5.
+            max_results: integer from 1 to 5, default 5. Other values return an error.
         """
         return _ops.search(query, max_results, self.mode)
 
