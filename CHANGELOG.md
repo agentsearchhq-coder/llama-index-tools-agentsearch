@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 (unreleased)
+## 0.2.1 (2026-10-20)
 
 ### Changed: paid search is now explicit opt-in (safety)
 
