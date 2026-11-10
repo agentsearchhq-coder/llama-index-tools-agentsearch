@@ -126,5 +126,6 @@ def test_tool_names_unchanged():
     assert [t.metadata.name for t in AgentSearchToolSpec().to_tool_list()] == ["search", "extract", "render"]
 
 
-def test_render_price_text_kept():
-    assert "$0.005" in AgentSearchToolSpec.render.__doc__
+def test_render_price_text_is_direct():
+    # 0.3.0: direct x402 is the default paid route, render is $0.010
+    assert "$0.010" in AgentSearchToolSpec.render.__doc__

@@ -37,20 +37,20 @@ class AgentSearchToolSpec(BaseToolSpec):
                 render_fallback: Optional[bool] = None) -> str:
         """Fetch a URL and return its main content as clean text/markdown. Best for articles, docs and static pages.
         If the result is empty or thin (JavaScript-heavy page, SPA, app shell), call render on the same URL, or pass
-        render_fallback=True to do that automatically (a second $0.005 call). Paid: $0.005 per call (needs a wallet).
+        render_fallback=True to do that automatically (a second paid call). Paid: $0.007 per call via AgentSearch's x402 API (needs a wallet).
 
         Args:
             url: http(s) URL to extract.
             formats: e.g. ["markdown"].
             max_chars: optional cap on returned characters.
-            render_fallback: if extract returns thin content, retry with render (extra $0.005).
+            render_fallback: if extract returns thin content, retry with render (a second paid call, $0.010).
         """
         return _ops.paid("extract", url=url, formats=formats, max_chars=max_chars, render_fallback=render_fallback)
 
     def render(self, url: str, formats: Optional[List[str]] = None, max_chars: Optional[int] = None,
                wait_until: Optional[str] = None, wait_for_selector: Optional[str] = None) -> str:
         """Render a page in a real headless browser. Use when extract returns empty or thin content, or for
-        JavaScript-heavy pages (SPAs, content loaded by scripts). Paid: $0.005 per call (needs a wallet).
+        JavaScript-heavy pages (SPAs, content loaded by scripts). Paid: $0.010 per call via AgentSearch's x402 API (needs a wallet).
 
         Args:
             url: http(s) URL to render.

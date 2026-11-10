@@ -5,8 +5,8 @@ A LlamaIndex `ToolSpec` for [AgentSearch](https://agentsearchhq.com/?utm_source=
 | Function | Cost |
 |---|---|
 | `search(query, max_results=None)` | **Free** (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`mode="paid"` or `AGENTSEARCH_MODE=paid`). |
-| `extract(url, formats=None, max_chars=None)` | $0.005/call (USDC on Base via x402) |
-| `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.005/call (headless browser for JS pages) |
+| `extract(url, formats=None, max_chars=None)` | $0.007/call (USDC on Base via x402 to AgentSearch) |
+| `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.010/call (headless browser for JS pages) |
 
 ## Install
 
@@ -36,15 +36,16 @@ Free-only tool list: `[t for t in spec.to_tool_list() if t.metadata.name == "sea
 
 ## Paid mode
 
-Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Each call costs $0.005 and is paid over x402 through the Pocket Network Agentic Portal using the official x402 Python SDK. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
+Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Since 0.3.0 each call is paid over x402 **directly to AgentSearch's own API** (`https://api.agentsearchhq.com`, USDC on Base, settled only on success) using the official x402 Python SDK: search $0.008, extract $0.007, render $0.010. $1 covers about 140 extracts. Prefer the Pocket Network Agentic Portal ($0.005 per call)? Set `AGENTSEARCH_PAYMENT_ROUTE=pocket`. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
 
 | Env var | Default |
 |---|---|
 | `AGENTSEARCH_MAX_TOTAL_ATOMIC` | `1000000` ($1.00 per process) |
-| `AGENTSEARCH_MAX_PER_CALL_ATOMIC` | `5000` ($0.005; can only be lowered) |
+| `AGENTSEARCH_PAYMENT_ROUTE` | `direct` (AgentSearch's x402 API); `pocket` = Pocket Network Agentic Portal at $0.005/call |
+| `AGENTSEARCH_MAX_PER_CALL_ATOMIC` | `10000` on the direct route, `5000` on Pocket ($0.010 / $0.005; can only be lowered) |
 | `AGENTSEARCH_TIMEOUT_MS` | `30000` |
 | `AGENTSEARCH_MODE` | unset (`paid` opts search into paid mode when `mode="auto"`) |
-| `AGENTSEARCH_EXTRACT_RENDER_FALLBACK` | unset (`1` = when extract returns thin content, render the URL once; a second $0.005 call) |
+| `AGENTSEARCH_EXTRACT_RENDER_FALLBACK` | unset (`1` = when extract returns thin content, render the URL once; a second paid call, $0.010) |
 
 Limits are checked before anything is signed. The key is not included in tool output or error messages. Paid results include a `payment` object.
 
