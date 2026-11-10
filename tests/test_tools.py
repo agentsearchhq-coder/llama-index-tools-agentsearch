@@ -23,7 +23,7 @@ from llama_index.tools.agentsearch import _client
 
 def test_spec_tools():
     names = [t.metadata.name for t in AgentSearchToolSpec().to_tool_list()]
-    assert names == ["search", "extract", "render"]
+    assert names == ["search", "extract", "render", "search_and_read"]
 
 
 def test_free_search(monkeypatch):
@@ -123,7 +123,7 @@ def test_max_results_valid(ok, expected):
 
 
 def test_tool_names_unchanged():
-    assert [t.metadata.name for t in AgentSearchToolSpec().to_tool_list()] == ["search", "extract", "render"]
+    assert [t.metadata.name for t in AgentSearchToolSpec().to_tool_list()] == ["search", "extract", "render", "search_and_read"]
 
 
 def test_render_price_text_is_direct():

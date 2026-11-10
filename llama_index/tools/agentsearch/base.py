@@ -9,7 +9,7 @@ from . import _ops
 
 
 class AgentSearchToolSpec(BaseToolSpec):
-    """AgentSearch tool spec: live web search (free by default), plus paid extract and render.
+    """AgentSearch tool spec: live web search (free by default), plus paid extract, render, and search-and-read.
 
     Args:
         mode: "auto" (default), "free" or "paid". Applies to search only. "auto" is free (up to 25
@@ -17,7 +17,7 @@ class AgentSearchToolSpec(BaseToolSpec):
             search to paid. If paid is opted in but the [paid] extra is missing, "auto" falls back to free.
     """
 
-    spec_functions = ["search", "extract", "render"]
+    spec_functions = ["search", "extract", "render", "search_and_read"]
 
     def __init__(self, mode: str = "auto") -> None:
         if mode not in ("auto", "free", "paid"):
@@ -61,3 +61,17 @@ class AgentSearchToolSpec(BaseToolSpec):
         """
         return _ops.paid("render", url=url, formats=formats, max_chars=max_chars,
                          wait_until=wait_until, wait_for_selector=wait_for_selector)
+
+    def search_and_read(self, query: str, num_results: Optional[int] = None, max_chars: Optional[int] = None,
+                        render_fallback: Optional[bool] = None) -> str:
+        """Search the live web and return the top results with each page's main text in one paid call ($0.015 USDC on Base, charged only when at least one page returns text).
+        Cheaper than a $0.008 search plus three $0.007 extracts ($0.029) and one payment instead of four. Default 3 results (max 5), default 8000 characters per page (max 20000).
+        Pass render_fallback=True to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Search itself stays free by default.
+
+        Args:
+            query: the search query.
+            num_results: how many top results to read, 1-5, default 3.
+            max_chars: max characters of page text per result, default 8000, max 20000.
+            render_fallback: if extract is thin, render at most one page in the same $0.015 call.
+        """
+        return _ops.search_and_read(query, num_results=num_results, max_chars=max_chars, render_fallback=render_fallback)
