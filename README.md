@@ -5,8 +5,13 @@ A LlamaIndex `ToolSpec` for [AgentSearch](https://agentsearchhq.com/?utm_source=
 | Function | Cost |
 |---|---|
 | `search(query, max_results=None)` | **Free** (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`mode="paid"` or `AGENTSEARCH_MODE=paid`). |
-| `extract(url, formats=None, max_chars=None)` | $0.007/call (USDC on Base via x402 to AgentSearch) |
+| `news_search(query, max_results=None, freshness=None, ...)` | $0.008/call (recent news with publish dates; no results, no charge) |
+| `extract(url, formats=None, max_chars=None, include_links=None)` | $0.004/call (USDC on Base via x402 to AgentSearch) |
 | `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.010/call (headless browser for JS pages) |
+| `screenshot(url, format=None, full_page=None, viewport_width=None, viewport_height=None)` | $0.010/call (PNG/JPEG saved to a local file; path returned) |
+| `search_and_read(query, num_results=None, max_chars=None, ...)` | $0.009/call (search plus the top pages' text in one payment) |
+
+Paid search, `news_search` and `search_and_read` accept filters: `freshness` (day/week/month/year), `date_from`/`date_to` (YYYY-MM-DD), `country`, `language`, and up to 5 `include_domains`/`exclude_domains` (free search ignores them). News, screenshot and search-and-read are direct-only (not on Pocket). Screenshots are saved in `AGENTSEARCH_SCREENSHOT_DIR` (default a temp folder) so base64 never floods the model's context.
 
 ## Install
 
@@ -36,13 +41,14 @@ Free-only tool list: `[t for t in spec.to_tool_list() if t.metadata.name == "sea
 
 ## Paid mode
 
-Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Since 0.3.0 each call is paid over x402 **directly to AgentSearch's own API** (`https://api.agentsearchhq.com`, USDC on Base, settled only on success) using the official x402 Python SDK: search $0.008, extract $0.007, render $0.010, search-and-read $0.015. $1 covers about 140 extracts. Prefer the Pocket Network Agentic Portal ($0.005 per call)? Set `AGENTSEARCH_PAYMENT_ROUTE=pocket`. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
+Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Since 0.3.0 each call is paid over x402 **directly to AgentSearch's own API** (`https://api.agentsearchhq.com`, USDC on Base, settled only on success) using the official x402 Python SDK: search $0.008, news $0.008, extract $0.004, render $0.010, screenshot $0.010, search-and-read $0.009. $1 covers about 250 extracts or 111 search-and-read calls. Prefer the Pocket Network Agentic Portal ($0.005 per call)? Set `AGENTSEARCH_PAYMENT_ROUTE=pocket`. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
 
 | Env var | Default |
 |---|---|
 | `AGENTSEARCH_MAX_TOTAL_ATOMIC` | `1000000` ($1.00 per process) |
 | `AGENTSEARCH_PAYMENT_ROUTE` | `direct` (AgentSearch's x402 API); `pocket` = Pocket Network Agentic Portal at $0.005/call |
-| `AGENTSEARCH_MAX_PER_CALL_ATOMIC` | `10000` on the direct route, `5000` on Pocket ($0.010 / $0.005; can only be lowered) |
+| `AGENTSEARCH_MAX_PER_CALL_ATOMIC` | `20000` on the direct route, `5000` on Pocket ($0.020 / $0.005; can only be lowered) |
+| `AGENTSEARCH_SCREENSHOT_DIR` | a temp folder (`agentsearch-screenshots`) |
 | `AGENTSEARCH_TIMEOUT_MS` | `30000` |
 | `AGENTSEARCH_MODE` | unset (`paid` opts search into paid mode when `mode="auto"`) |
 | `AGENTSEARCH_EXTRACT_RENDER_FALLBACK` | unset (`1` = when extract returns thin content, render the URL once; a second paid call, $0.010) |
