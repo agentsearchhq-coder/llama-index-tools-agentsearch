@@ -5,10 +5,10 @@ A LlamaIndex `ToolSpec` for [AgentSearch](https://agentsearchhq.com/?utm_source=
 | Function | Cost |
 |---|---|
 | `search(query, max_results=None)` | **Free** (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`mode="paid"` or `AGENTSEARCH_MODE=paid`). |
-| `news_search(query, max_results=None, freshness=None, ...)` | $0.005/call (recent news with publish dates; no results, no charge) |
+| `news_search(query, max_results=None, freshness=None, ...)` | $0.003/call (recent news with publish dates; no results, no charge) |
 | `extract(url, formats=None, max_chars=None, include_links=None)` | $0.002/call (USDC on Base via x402 to AgentSearch) |
 | `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.005/call (headless browser for JS pages) |
-| `screenshot(url, format=None, full_page=None, viewport_width=None, viewport_height=None)` | $0.005/call (PNG/JPEG saved to a local file; path returned) |
+| `screenshot(url, format=None, full_page=None, viewport_width=None, viewport_height=None)` | $0.004/call (PNG/JPEG saved to a local file; path returned) |
 | `search_and_read(query, num_results=None, max_chars=None, ...)` | $0.005/call (search plus the top pages' text in one payment) |
 
 Paid search, `news_search` and `search_and_read` accept filters: `freshness` (day/week/month/year), `date_from`/`date_to` (YYYY-MM-DD), `country`, `language`, and up to 5 `include_domains`/`exclude_domains` (free search ignores them). News, screenshot and search-and-read are direct-only (not on Pocket). Screenshots are saved in `AGENTSEARCH_SCREENSHOT_DIR` (default a temp folder) so base64 never floods the model's context.
