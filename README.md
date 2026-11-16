@@ -6,10 +6,10 @@ A LlamaIndex `ToolSpec` for [AgentSearch](https://agentsearchhq.com/?utm_source=
 |---|---|
 | `search(query, max_results=None)` | **Free** (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`mode="paid"` or `AGENTSEARCH_MODE=paid`). |
 | `news_search(query, max_results=None, freshness=None, ...)` | $0.005/call (recent news with publish dates; no results, no charge) |
-| `extract(url, formats=None, max_chars=None, include_links=None)` | $0.004/call (USDC on Base via x402 to AgentSearch) |
+| `extract(url, formats=None, max_chars=None, include_links=None)` | $0.002/call (USDC on Base via x402 to AgentSearch) |
 | `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.005/call (headless browser for JS pages) |
 | `screenshot(url, format=None, full_page=None, viewport_width=None, viewport_height=None)` | $0.005/call (PNG/JPEG saved to a local file; path returned) |
-| `search_and_read(query, num_results=None, max_chars=None, ...)` | $0.006/call (search plus the top pages' text in one payment) |
+| `search_and_read(query, num_results=None, max_chars=None, ...)` | $0.005/call (search plus the top pages' text in one payment) |
 
 Paid search, `news_search` and `search_and_read` accept filters: `freshness` (day/week/month/year), `date_from`/`date_to` (YYYY-MM-DD), `country`, `language`, and up to 5 `include_domains`/`exclude_domains` (free search ignores them). News, screenshot and search-and-read are direct-only (not on Pocket). Screenshots are saved in `AGENTSEARCH_SCREENSHOT_DIR` (default a temp folder) so base64 never floods the model's context.
 
@@ -41,7 +41,7 @@ Free-only tool list: `[t for t in spec.to_tool_list() if t.metadata.name == "sea
 
 ## Paid mode
 
-Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Since 0.3.0 each call is paid over x402 **directly to AgentSearch's own API** (`https://api.agentsearchhq.com`, USDC on Base, settled only on success) using the official x402 Python SDK: search $0.005, news $0.005, extract $0.004, render $0.005, screenshot $0.005, search-and-read $0.006. $1 covers about 250 extracts or 111 search-and-read calls. Prefer the Pocket Network Agentic Portal ($0.005 per call)? Set `AGENTSEARCH_PAYMENT_ROUTE=pocket`. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
+Install the `paid` extra (`pip install "llama-index-tools-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Since 0.3.0 each call is paid over x402 **directly to AgentSearch's own API** (`https://api.agentsearchhq.com`, USDC on Base, settled only on success) using the official x402 Python SDK: search $0.003, news $0.003, extract $0.002, render $0.005, screenshot $0.004, search-and-read $0.005. $1 covers about 500 extracts or 200 search-and-read calls. Prefer the Pocket Network Agentic Portal ($0.005 per call)? Set `AGENTSEARCH_PAYMENT_ROUTE=pocket`. Extract and render use the key directly. Search goes paid (unlimited) only when you opt in with `AgentSearchToolSpec(mode="paid")` or `AGENTSEARCH_MODE=paid`; a key alone does not switch it. In `mode="auto"`, if `AGENTSEARCH_MODE=paid` is set but the `[paid]` extra is missing, search falls back to free with a logged warning.
 
 | Env var | Default |
 |---|---|

@@ -127,5 +127,5 @@ def test_tool_names_unchanged():
 
 
 def test_render_price_text_is_direct():
-    # 0.3.0: direct x402 is the default paid route, render is $0.010
-    assert "$0.010" in AgentSearchToolSpec.render.__doc__
+    # 0.3.0: direct x402 is the default paid route, render is $0.005
+    assert "$0.005" in AgentSearchToolSpec.render.__doc__
