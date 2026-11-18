@@ -98,8 +98,9 @@ def news(query: str, max_results: Optional[int] = None, **filters: Any) -> str:
         if not c.has_wallet_key():
             raise c.AgentSearchError(c.paid_only_message("agentsearch_news_search"))
         body: dict[str, Any] = {"query": query, **_filters(filters)}
+        max_results = c.coerce_max_results(max_results, 1, 10)
         if max_results is not None:
-            body["max_results"] = max(1, min(int(max_results), 10))
+            body["max_results"] = max_results
         return c.dumps(c.call_portal("news", body))
     except Exception as e:
         return f"Error: {e}"

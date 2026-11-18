@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llama-index-tools-agentsearch"
-version = "0.5.3"
+version = "0.5.4"
 description = "llama-index tools agentsearch integration: free live web search, plus pay-per-call news, extract, JS render, screenshots and search-and-read"
 readme = "README.md"
 license = "MIT"
