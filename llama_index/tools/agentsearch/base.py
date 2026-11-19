@@ -13,7 +13,7 @@ class AgentSearchToolSpec(BaseToolSpec):
 
     Args:
         mode: "auto" (default), "free" or "paid". Applies to search only. "auto" pays $0.003 per search
-            when a wallet is configured (or AGENTSEARCH_MODE=paid) and is free (up to 25 searches/day per IP)
+            when a wallet is configured (or AGENTSEARCH_MODE=paid) and is free (25 searches per IP in total, then pay per call)
             otherwise; AGENTSEARCH_MODE=free keeps it free. If the [paid] extra is missing, "auto" falls back to free.
     """
 
