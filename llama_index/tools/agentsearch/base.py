@@ -9,12 +9,12 @@ from . import _ops
 
 
 class AgentSearchToolSpec(BaseToolSpec):
-    """AgentSearch tool spec: live web search (free by default), plus paid news, extract, render, screenshot and search-and-read.
+    """AgentSearch tool spec: live web search (free without a wallet), plus paid news, extract, render, screenshot and search-and-read.
 
     Args:
-        mode: "auto" (default), "free" or "paid". Applies to search only. "auto" is free (up to 25
-            searches/day per IP) unless AGENTSEARCH_MODE=paid is set; a wallet key alone never switches
-            search to paid. If paid is opted in but the [paid] extra is missing, "auto" falls back to free.
+        mode: "auto" (default), "free" or "paid". Applies to search only. "auto" pays $0.003 per search
+            when a wallet is configured (or AGENTSEARCH_MODE=paid) and is free (up to 25 searches/day per IP)
+            otherwise; AGENTSEARCH_MODE=free keeps it free. If the [paid] extra is missing, "auto" falls back to free.
     """
 
     spec_functions = ["search", "news_search", "extract", "render", "screenshot", "search_and_read"]
@@ -28,8 +28,8 @@ class AgentSearchToolSpec(BaseToolSpec):
                date_from: Optional[str] = None, date_to: Optional[str] = None, country: Optional[str] = None,
                language: Optional[str] = None, include_domains: Optional[List[str]] = None,
                exclude_domains: Optional[List[str]] = None) -> str:
-        """Live web search. Returns JSON with up to 5 ranked results (title, url, content). Free by default; paid
-        search ($0.003) also honors the filters below (free search ignores them). For recent news use news_search.
+        """Live web search. Returns JSON with up to 5 ranked results (title, url, content). Free without a wallet; paid
+        search ($0.003, with a wallet) also honors the filters below (free search ignores them). For recent news use news_search.
 
         Args:
             query: the search query.
@@ -105,7 +105,7 @@ class AgentSearchToolSpec(BaseToolSpec):
                exclude_domains: Optional[List[str]] = None) -> str:
         """Search the live web and return the top results with each page's main text in one paid call ($0.005 USDC on Base, charged only when at least one page returns text).
         Cheaper than a $0.003 search plus three $0.002 extracts ($0.009) and one payment instead of four. Default 3 results (max 5), default 8000 characters per page (max 20000).
-        Pass render_fallback=True to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Search itself stays free by default.
+        Pass render_fallback=True to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Plain search is free without a wallet.
 
         Args:
             query: the search query.

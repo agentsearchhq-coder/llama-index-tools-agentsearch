@@ -69,14 +69,21 @@ def test_free_limit_429_says_per_ip(monkeypatch):
     assert out.startswith("Error:") and "per IP" in out
 
 
-def test_auto_with_key_stays_free(monkeypatch):
-    seen = mock(monkeypatch, _client, 200, {"results": []})
+def test_auto_with_key_pays_and_mode_free_opts_out(monkeypatch):
+    """0.6.0: a wallet makes search paid by default; AGENTSEARCH_MODE=free keeps it free."""
     monkeypatch.setenv("AGENTSEARCH_WALLET_PRIVATE_KEY", FAKE_KEY)
     monkeypatch.delenv("AGENTSEARCH_MODE", raising=False)
+    monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
+    monkeypatch.setattr(_client, "call_portal", lambda op, body, client=None: {"paid": op})
+    out = json.loads(AgentSearchToolSpec().search("hi"))
+    assert out["paid"] == "search" and out["agentsearch_mode"].startswith("paid: ")
+    seen = mock(monkeypatch, _client, 200, {"results": []})
+    monkeypatch.setenv("AGENTSEARCH_MODE", "free")
     monkeypatch.setattr(_client, "call_portal", lambda *a, **k: pytest.fail("paid path used"))
     out = AgentSearchToolSpec().search("hi")
     assert not out.startswith("Error:") and len(seen) == 1
     assert seen[0].url.host == "relay.agentsearchhq.com"
+    assert json.loads(out)["agentsearch_mode"].startswith("free: ")
 
 
 def test_auto_env_paid_uses_paid(monkeypatch):
@@ -85,6 +92,7 @@ def test_auto_env_paid_uses_paid(monkeypatch):
     monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
     monkeypatch.setattr(_client, "call_portal", lambda op, body, client=None: {"paid": op, "body": body})
     out = json.loads(AgentSearchToolSpec().search("hi", max_results=2))
+    assert out.pop("agentsearch_mode").startswith("paid: ")
     assert out == {"paid": "search", "body": {"query": "hi", "max_results": 2}}
 
 
@@ -102,7 +110,8 @@ def test_auto_env_paid_without_extra_falls_back(monkeypatch, caplog):
 def test_explicit_paid_mode(monkeypatch):
     mock(monkeypatch, _client, 200, {})
     monkeypatch.setattr(_client, "call_portal", lambda op, body, client=None: {"paid": op})
-    assert json.loads(AgentSearchToolSpec(mode="paid").search("hi")) == {"paid": "search"}
+    out = json.loads(AgentSearchToolSpec(mode="paid").search("hi"))
+    assert out["paid"] == "search" and out["agentsearch_mode"].startswith("paid: ")
 
 
 def test_explicit_free_ignores_env(monkeypatch):
