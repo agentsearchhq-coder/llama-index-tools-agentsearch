@@ -138,3 +138,11 @@ def test_tool_names_unchanged():
 def test_render_price_text_is_direct():
     # 0.3.0: direct x402 is the default paid route, render is $0.005
     assert "$0.005" in AgentSearchToolSpec.render.__doc__
+
+
+def test_free_limit_message_lifetime_wording():
+    # 2026-11-19: free search is 25 searches per IP in total (lifetime), then pay per call; no daily reset.
+    msg = _client.FREE_LIMIT_MESSAGE
+    assert "25 free searches per IP in total, then pay per call" in msg
+    assert "searches/day" not in msg and "resets daily" not in msg
+    assert "per IP in total" in _client.search_mode_label("free")

@@ -4,7 +4,7 @@ A LlamaIndex `ToolSpec` for [AgentSearch](https://agentsearchhq.com/?utm_source=
 
 | Function | Cost |
 |---|---|
-| `search(query, max_results=None)` | **Free** with no wallet (up to 25 searches/day per IP, up to 5 results, no key). With a wallet and the `[paid]` extra, $0.003/call and unlimited (from 0.6.0; `mode="free"` or `AGENTSEARCH_MODE=free` keeps it free). |
+| `search(query, max_results=None)` | **Free** with no wallet (25 free searches per IP in total, then pay per call, up to 5 results, no key). With a wallet and the `[paid]` extra, $0.003/call and unlimited (from 0.6.0; `mode="free"` or `AGENTSEARCH_MODE=free` keeps it free). |
 | `news_search(query, max_results=None, freshness=None, ...)` | $0.003/call (recent news with publish dates; no results, no charge) |
 | `extract(url, formats=None, max_chars=None, include_links=None)` | $0.002/call (USDC on Base via x402 to AgentSearch) |
 | `render(url, formats=None, max_chars=None, wait_until=None, wait_for_selector=None)` | $0.005/call (headless browser for JS pages) |
@@ -69,7 +69,7 @@ reset_session_budget()
 
 ## Errors
 
-Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the daily limit (up to 25 searches/day per IP) was hit, and the message explains how to upgrade. Search, news and search-and-read reject queries shorter than 2 characters (after trimming) before any request, so nothing is sent or charged; other 4xx errors from the free relay say to fix the input instead of retrying it unchanged.
+Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the free search allowance (25 free searches per IP in total, then pay per call) is used up or shared daily capacity is reached, and the message explains how to upgrade. Search, news and search-and-read reject queries shorter than 2 characters (after trimming) before any request, so nothing is sent or charged; other 4xx errors from the free relay say to fix the input instead of retrying it unchanged.
 
 ## Development
 
