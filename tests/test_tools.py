@@ -34,6 +34,7 @@ def test_free_search(monkeypatch):
 
 
 def test_paid_without_wallet(monkeypatch):
+    monkeypatch.setenv("AGENTSEARCH_FREE_TRIAL", "0")
     seen = mock(monkeypatch, _client, 200, {})
     assert "no call was made" in AgentSearchToolSpec().render("https://example.com") and not seen
 
